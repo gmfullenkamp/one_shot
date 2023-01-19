@@ -1,9 +1,17 @@
+"""
+https://medium.com/predict/creating-a-chatbot-from-scratch-using-keras-and-tensorflow-59e8fc76be79
+"""
 import numpy as np
 import os
 import re
 import tensorflow as tf
 import tensorflow_datasets as tfds
 from tqdm import tqdm
+
+TRAINING_SAMPLES = 16000
+VALIDATION_SAMPLES = 4000
+EPOCHS = 100
+RETRAIN = False
 
 # Load dataset
 print("Loading Dataset...")
@@ -15,14 +23,15 @@ validation_ds = squad_ds["validation"]
 questions = []
 answers = []
 print("Iterating through train dataset...")
-# TODO: Train using entire dataset on home machine
-for sample in tqdm(train_ds.take(8000).as_numpy_iterator()):
+for sample in tqdm(train_ds.shuffle(999999).take(TRAINING_SAMPLES).cache().as_numpy_iterator()):
     answers.append(sample["answers"]["text"][0].decode("utf-8"))
     questions.append(sample["question"].decode("utf-8"))
 print("Iterating through validation dataset...")
-for sample in tqdm(validation_ds.take(2000).as_numpy_iterator()):
+for sample in tqdm(validation_ds.shuffle(999999).take(VALIDATION_SAMPLES).cache().as_numpy_iterator()):
     answers.append(sample["answers"]["text"][0].decode("utf-8"))
     questions.append(sample["question"].decode("utf-8"))
+print("Dataset examples:\n\t", questions[0], "\n\t", answers[0], "\n\t",
+      questions[1], "\n\t", answers[1], "\n\t", questions[2], "\n\t", answers[2])
 tokenizer = tf.keras.preprocessing.text.Tokenizer()
 tokenizer.fit_on_texts(questions + answers)
 VOCAB_SIZE = len(tokenizer.word_index) + 1
@@ -89,8 +98,12 @@ model.summary()
 # Train model
 model_path = os.path.join(os.getcwd(), "model.h5")
 if not os.path.exists(model_path):
-    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=150)
+    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS)
     model.save("model.h5")
+elif RETRAIN:
+    model.load_weights(model_path)
+    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS)
+    model.save("model.h5", overwrite=True)
 else:
     model.load_weights(model_path)
 

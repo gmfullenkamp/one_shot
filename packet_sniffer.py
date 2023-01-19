@@ -19,5 +19,7 @@ def get_queries(p: str):
         pass
 
 
+# TODO: Get this query packet sniffing working outside the running machine
+#  youtube iPhone and Android WiFi Man-in-the-middle attack // PYTHON Scapy scripts for attacking networks
 print("Sniffed queries:")
 capture = sniff(prn=lambda x: get_queries(x), count=COUNT)

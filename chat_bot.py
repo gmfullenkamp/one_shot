@@ -8,14 +8,14 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from tqdm import tqdm
 
-TRAINING_SAMPLES = 16000
-VALIDATION_SAMPLES = 4000
+TRAINING_SAMPLES = 50000
+VALIDATION_SAMPLES = 5000
 EPOCHS = 100
-RETRAIN = False
+RETRAIN = True  # If model doesn't exist, retrain
 
 # Load dataset
 print("Loading Dataset...")
-squad_ds = tfds.load("squad")
+squad_ds = tfds.load("natural_questions_open")
 train_ds = squad_ds["train"]
 validation_ds = squad_ds["validation"]
 
@@ -23,13 +23,13 @@ validation_ds = squad_ds["validation"]
 questions = []
 answers = []
 print("Iterating through train dataset...")
-for sample in tqdm(train_ds.shuffle(999999).take(TRAINING_SAMPLES).cache().as_numpy_iterator()):
-    answers.append(sample["answers"]["text"][0].decode("utf-8"))
-    questions.append(sample["question"].decode("utf-8"))
+for sample in tqdm(train_ds.take(TRAINING_SAMPLES).cache().as_numpy_iterator()):
+    answers.append(sample["answer"][0].decode("utf-8").lower())
+    questions.append(sample["question"].decode("utf-8").lower())
 print("Iterating through validation dataset...")
-for sample in tqdm(validation_ds.shuffle(999999).take(VALIDATION_SAMPLES).cache().as_numpy_iterator()):
-    answers.append(sample["answers"]["text"][0].decode("utf-8"))
-    questions.append(sample["question"].decode("utf-8"))
+for sample in tqdm(validation_ds.take(VALIDATION_SAMPLES).cache().as_numpy_iterator()):
+    answers.append(sample["answer"][0].decode("utf-8").lower())
+    questions.append(sample["question"].decode("utf-8").lower())
 print("Dataset examples:\n\t", questions[0], "\n\t", answers[0], "\n\t",
       questions[1], "\n\t", answers[1], "\n\t", questions[2], "\n\t", answers[2])
 tokenizer = tf.keras.preprocessing.text.Tokenizer()
@@ -94,16 +94,23 @@ output = decoder_dense(decoder_outputs)
 model = tf.keras.models.Model([encoder_inputs, decoder_inputs], output)
 model.compile(optimizer=tf.keras.optimizers.RMSprop(), loss="categorical_crossentropy")
 model.summary()
+output_path = os.path.join(os.getcwd(), "chat_bot_model")
+if not os.path.exists(output_path):
+    os.mkdir(output_path)
+callbacks = [tf.keras.callbacks.CSVLogger(filename=os.path.join(output_path, "training.log"), append=True),
+             tf.keras.callbacks.EarlyStopping(monitor="loss", min_delta=0.01, patience=5, restore_best_weights=True)]
 
 # Train model
-model_path = os.path.join(os.getcwd(), "model.h5")
+model_path = os.path.join(output_path, "model.h5")
 if not os.path.exists(model_path):
-    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS)
-    model.save("model.h5")
+    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS,
+              callbacks=callbacks)
+    model.save(model_path)
 elif RETRAIN:
     model.load_weights(model_path)
-    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS)
-    model.save("model.h5", overwrite=True)
+    model.fit([encoder_input_data, decoder_input_data], decoder_output_data, batch_size=50, epochs=EPOCHS,
+              callbacks=callbacks)
+    model.save(model_path, overwrite=True)
 else:
     model.load_weights(model_path)
 
@@ -139,7 +146,8 @@ def str_to_tokens(sentence: str):
 enc_model, dec_model = make_inference_models()
 
 for _ in range(10):
-    states_values = enc_model.predict(str_to_tokens(input("Enter question: ")))
+    states_values = enc_model.predict(str_to_tokens(input("Enter question: ").lower()))
+    # TODO: Fix logs when input word isn't allowed and save the word out for logs
     empty_target_seq = np.zeros((1, 1))
     empty_target_seq[0, 0] = tokenizer.word_index["start"]
     stop_condition = False

@@ -1,44 +1,42 @@
-import wikipedia
+from PyDictionary import PyDictionary
+
+DICT = PyDictionary()
 
 
-BLACK_LIST = ["who", "what", "when", "where", "why", "how", "is", "a", "the", "your", "of", "that", "you", "could",
-              "have", "would", "should", "it", "be", "and", "if", "an", "to", "for", "do", "were"]
+def remove_from_str(in_str: str, black_list: list) -> str:
+    """Removes strings and characters from the input string."""
+    for w in black_list:
+        in_str = in_str.replace(w, "")
+    return in_str
 
 
-def remove_words(input_str: str) -> str:
-    """Takes in a string and removes words on blacklist."""
-    output_str = ""
-    for word in input_str.split(" "):
-        word = word.replace("?", "")
-        if word not in BLACK_LIST:
-            output_str += word
-            output_str += " "
-    return output_str
-
-
-def wiki_search(query: str):
-    """Takes in a question string and gets an answer from google."""
-    key_words = remove_words(query)
-    # print("Key words:", key_words)
-    query = wikipedia.search(key_words, results=5)
-    # print("Top wiki articles:", query)
-    for q in query:
-        try:  # Fixes occasional wiki search page not found error
-            answer = wikipedia.summary(q, sentences=1)  # TODO: possibly extend on a conversation about a question (>1)
-            break
-        except:
-            pass
+def definition_search(in_str: str):
+    """Takes in a 'Define...' string and outputs the definition"""
+    key_words = remove_from_str(in_str.lower(), ["define ", "?", ".", ",", "'"])  # Removes extraneous words and chars
+    answer = ""
+    if " " in key_words:  # Retrieves the first word definition if multiple are given
+        key_words = key_words.split(" ")[0]
+        answer = "Multiple words inputted. Defining " + key_words + ". "
+        meaning = DICT.meaning(key_words)
+    else:
+        meaning = DICT.meaning(key_words, disable_errors=True)
+    if meaning is not None:
+        for m in meaning.keys():  # Goes through the definitions and adds them all to the answer
+            for sm in meaning[m]:
+                answer += (m + ": " + sm + ". \n\t")
+        answer = answer[:-2]  # Removes the last return '\n'
+    else:
+        answer = "'" + key_words + "' isn't a real word."
+    # more_answer =  # TODO: Possibly have synonym and other word based information
     return answer
 
 
-print("INPUT WARNING: '?' forces a query search for an answer.\n"
-      "\tContractions will destroy input information (e.g. what's).\n")
+# print("INPUT WARNING: \n")
 
 while True:
     user_input = input("User: ").lower()
-    if "?" in user_input:  # If question, wiki answer
-        output = wiki_search(user_input)
-    else:  # If not question, repeat user input filtered
-        # TODO: Implement non question conversation replies
-        output = "Non question reply not implemented."
+    if "define" in user_input:
+        output = definition_search(user_input)
+    else:
+        output = "Not implemented error. Try using define."
     print("\nChatter:", output, "\n")

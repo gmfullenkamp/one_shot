@@ -11,6 +11,7 @@ import random
 ALL_TILES = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 BOARD_SHAPE = [3, 3]
 
+# States
 goal_state = np.reshape(ALL_TILES, BOARD_SHAPE).tolist()
 random.shuffle(ALL_TILES)
 start_state = np.reshape(ALL_TILES, BOARD_SHAPE).tolist()
@@ -29,6 +30,9 @@ print("Goal state:")
 state_print(goal_state)
 print("Start state:")
 state_print(start_state)
+
+
+# TODO: Create operations (swap 0 up, down, left, and right)
 
 
 class NonBinTree:

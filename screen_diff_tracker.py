@@ -67,14 +67,9 @@ def compare_images(img1: np.array, img2: np.array) -> np.array:
             cv2.drawContours(mask, [c], 0, (255, 255, 255), -1)
             cv2.drawContours(filled_after, [c], 0, (0, 255, 0), -1)
 
-    cv2.imshow("before", img1)
     cv2.imshow("after", img2)
-    cv2.imshow("diff", diff)
-    cv2.imshow("diff_box", diff_box)
-    cv2.imshow("mask", mask)
-    cv2.imshow("filled after", filled_after)
     cv2.waitKey()
-    return mask
+    return img2
 
 
-mask = compare_images(initial_images[0], initial_images[1])
+diff_img = compare_images(initial_images[0], initial_images[1])

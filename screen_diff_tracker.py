@@ -1,3 +1,9 @@
+"""
+This script is based on the "I'm on observation duty" games.
+It does image comparison to see what and where things have changed in an image.
+"""
+import time
+
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
@@ -5,7 +11,7 @@ import pyautogui as pag
 from skimage.metrics import structural_similarity
 
 
-TIME_BETWEEN = 5
+DIFF_THRESHOLD = 0.99
 
 
 # Gets the number of images that will be watched
@@ -27,12 +33,9 @@ for ax, im in zip(axs, initial_images):
 plt.show()
 
 
-def compare_images(img1: np.array, img2: np.array) -> np.array:
+def compare_images(img1: np.array, img2: np.array) -> None:
     """Compares two images and returns an image with white pixels for the differences."""
     # https://stackoverflow.com/questions/56183201/detect-and-visualize-differences-between-two-images-with-opencv-python
-    img1 = np.array(img1)
-    img2 = np.array(img2)
-
     # Convert images to grayscale
     img1_gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2_gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
@@ -40,6 +43,8 @@ def compare_images(img1: np.array, img2: np.array) -> np.array:
     # Compute SSIM between the two images
     (score, diff) = structural_similarity(img1_gray, img2_gray, full=True)
     print("Image similarity: {}%".format(score * 100))
+    if score >= DIFF_THRESHOLD:
+        return None
 
     # The diff image contains the actual image differences between the two images
     # and is represented as a floating point data type in the range [0, 1]
@@ -67,9 +72,17 @@ def compare_images(img1: np.array, img2: np.array) -> np.array:
             cv2.drawContours(mask, [c], 0, (255, 255, 255), -1)
             cv2.drawContours(filled_after, [c], 0, (0, 255, 0), -1)
 
-    cv2.imshow("after", img2)
+    cv2.imshow("Differences", img1)
     cv2.waitKey()
-    return img2
 
 
-diff_img = compare_images(initial_images[0], initial_images[1])
+input("Press enter when you are in the first room and ready to start the difference surveillance tracker.")
+while True:
+    for room in initial_images:
+        time.sleep(0.1)
+        new_img = pag.screenshot()
+        # Plots an image with differences when spotted and pauses for user response
+        compare_images(np.array(room), np.array(new_img))
+        pag.moveTo(50, 50, duration=0.01)
+        pag.click()
+        pag.press("d")

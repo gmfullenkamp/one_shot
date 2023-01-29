@@ -2,16 +2,15 @@
 This script is based on the "I'm on observation duty" games.
 It does image comparison to see what and where things have changed in an image.
 """
-import time
-
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 import pyautogui as pag
 from skimage.metrics import structural_similarity
+import time
 
 
-DIFF_THRESHOLD = 0.99
+DIFF_THRESHOLD = 0.9999
 
 
 # Gets the number of images that will be watched
@@ -55,7 +54,8 @@ def compare_images(img1: np.array, img2: np.array) -> None:
 
     # Threshold the difference image, followed by finding contours to
     # obtain the regions of the two input images that differ
-    thresh = cv2.threshold(diff, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
+    diff = np.expand_dims(diff, axis=-1)  # Adds a single channel for adaptive thresholding
+    thresh = cv2.adaptiveThreshold(diff, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 9, 25)
     contours = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     contours = contours[0] if len(contours) == 2 else contours[1]
 
@@ -72,7 +72,10 @@ def compare_images(img1: np.array, img2: np.array) -> None:
             cv2.drawContours(mask, [c], 0, (255, 255, 255), -1)
             cv2.drawContours(filled_after, [c], 0, (0, 255, 0), -1)
 
-    cv2.imshow("Differences", img1)
+    # Uncomment to help debug difference and thresholding issues
+    cv2.imshow("difference", diff)
+    # cv2.imshow("threshold", thresh)
+    # cv2.imshow("original", img1)
     cv2.waitKey()
 
 
@@ -86,3 +89,4 @@ while True:
         pag.moveTo(50, 50, duration=0.01)
         pag.click()
         pag.press("d")
+        pag.moveTo(3, 3, duration=0.01)

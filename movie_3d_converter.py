@@ -17,9 +17,9 @@ def pn_2_rb(in_img: np.array) -> np.array:
     rb_img = np.zeros(shp + [3])
     for r in range(shp[0]):
         for c in range(shp[1]):
-            if in_img[r][c] > 0:
+            if in_img[r][c] > 10:
                 rb_img[r][c] = [0., 230., 255.]  # Turns positives into red
-            elif in_img[r][c] < 0:
+            elif in_img[r][c] < -10:
                 rb_img[r][c] = [255., 0., 255.]  # Turns negatives into blue
     return rb_img
 

@@ -40,4 +40,5 @@ ax4.set_title("Holo")
 ax4.imshow(holo_img, cmap="brg")
 plt.show()
 
+# TODO: Add ignored outputs folder, add .gitignore, add /.idea to .gitignore
 cv2.imwrite("holo_" + IMG_NAME, holo_img)

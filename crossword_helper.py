@@ -44,6 +44,7 @@ def get_across(board: list, n: int) -> str:
 
 def get_down(board: list, n: int) -> str:
     """Retrieves the nth down word on the board and returns the string (with empty spaces)."""
+    # TODO: Finish implementation of get down (May need to change board to list of list of char instead of list of str)
 
 
 puzzle = get_board()

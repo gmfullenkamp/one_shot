@@ -37,6 +37,7 @@ while True:
     user_input = input("User: ").lower()
     if "define" in user_input:
         output = definition_search(user_input)
+        # TODO: Add other key words for commands and have the else implement a chat_bot (similar to gpt chat bot)
     else:
         output = "Not implemented error. Try using define."
     print("\nChatter:", output, "\n")

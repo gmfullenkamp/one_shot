@@ -1,0 +1,9 @@
+# Compiled Python bytecode
+*.py[cod]
+
+# JetBrains IDE
+.idea/
+
+# Image files
+*.png
+*.jpg

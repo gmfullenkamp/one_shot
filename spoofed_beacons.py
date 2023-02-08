@@ -14,6 +14,7 @@ IFACE = "mon0"
 BROADCAST = "ff:ff:ff:ff:ff:ff"
 BSSID = "aa:aa:aa:aa:aa:aa"
 
+# TODO: Works on linux machines but not windows :'(
 frames = []
 for netSSID in SSIDS:
     print(netSSID)

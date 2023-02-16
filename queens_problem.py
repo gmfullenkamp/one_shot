@@ -13,7 +13,9 @@ Goal state               Indices
 Where 0 is an empty tile and 1 is a queen.
 """
 from copy import deepcopy
-board = [[0, 0, 0, 0, 0, 0, 0, 0],
+import math
+import random
+BOARD = [[0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0],
@@ -22,18 +24,16 @@ board = [[0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0],
          [0, 0, 0, 0, 0, 0, 0, 0]]
 
-# INPUTS:
-n_queens = 9
-queen_range = 4
+########## INPUTS ##########
+# Change these to test the code on new input patterns
+n_queens = 10
+queen_range = 5
 # This will change as queens move (initial indices from 1-8)
-queen_locations = [[1, 7], [2, 4], [3, 8], [4, 1], [4, 6], [5, 5], [6, 2], [7, 2], [8, 3]]
+queen_locations = [[1, 7], [2, 4], [2, 5], [3, 8], [4, 1], [4, 6], [5, 5], [6, 2], [7, 2], [8, 3]]
+
 for i, row in enumerate(queen_locations):  # Puts input in 0-7 index scale
     for j, col in enumerate(row):
         queen_locations[i][j] = col - 1
-
-# Place the queens on the BOARD
-for loc in queen_locations:
-    board[loc[0]][loc[1]] = 1
 
 
 def print_stats(bd: list, nc: int, qcs: list, qls: list) -> None:
@@ -54,6 +54,7 @@ def print_stats(bd: list, nc: int, qcs: list, qls: list) -> None:
 
 
 def calc_conflicts(b: list, qls: list) -> (int, list):
+    """The heuristic for calculating the number of conflicts on the board."""
     cons = 0
     q_con = []
     for q in qls:  # Checks each queen location with queen_range as the conflict
@@ -79,9 +80,34 @@ def calc_conflicts(b: list, qls: list) -> (int, list):
         q_con.append(curr_con)
         cons += curr_con
     cons /= 2  # Gets every queen conflict, so conflicts are detected twice
-    return cons, q_con
+    return math.ceil(cons), q_con
 
 
+class SearchTree:
+    def __init__(self, bd, qls) -> None:
+        self.board = deepcopy(bd)
+        self.queen_locations = deepcopy(qls)
+        self.conflicts, _ = calc_conflicts(self.board, self.queen_locations)
+        self.nodes = []
+
+    def add_node(self, bd, qls) -> None:
+        self.nodes.append(SearchTree(bd, qls))
+
+    def get_best_child(self):
+        lowest = self.conflicts
+        best_node = self.nodes[0]
+        random.shuffle(self.nodes)
+        for n in self.nodes:
+            if n.conflicts <= lowest:
+                lowest = n.conflicts
+                best_node = n
+        return best_node
+
+
+# Place the queens on the board
+board = deepcopy(BOARD)
+for loc in queen_locations:
+    board[loc[0]][loc[1]] = 1
 num_conflicts, queen_conflicts = calc_conflicts(board, queen_locations)
 print("--------------------------------------------------")
 print("Initial state:")
@@ -90,60 +116,50 @@ print_stats(board, num_conflicts, queen_conflicts, queen_locations)
 # Keep statistics as the hill climbing chooses future answers
 state_transitions = 0
 neighboring_states_viewed = 0
-failed_better = 0
 game_over = False
-# Creates a list of all possible places to move this queen (neighboring states)
-possible_moves = []
+# Create a consistent list of all the possible spots for a queen to move
+possible_locations = []
 for i in range(8):
     for j in range(8):
-        possible_moves.append([i, j])
+        possible_locations.append([i, j])
 
 while not game_over:
     state_transitions += 1
-    prev_conflicts = deepcopy(num_conflicts)
-    prev_queen_conflicts = deepcopy(queen_conflicts)
-    print("--------------------------------------------------")
-    # Finds the queen with the most conflicts
-    worst_queen_index = int(queen_conflicts.index(max(queen_conflicts)))
-    worst_queen_loc = queen_locations[worst_queen_index]
-    # Removes the worst queen from the board
-    board[worst_queen_loc[0]][worst_queen_loc[1]] = 0
-    # Initializes there is no best next state yet
-    best_neighbor_board = None
-    best_neighbor_queen_locations = None
-    best_neighbor_num_conflicts = 1000000000  # Large because we want smaller number of conflicts
-    for poss_loc in possible_moves:  # Iterates through neighboring states
-        if board[poss_loc[0]][poss_loc[1]] == 0 and poss_loc != worst_queen_loc:  # If no queen in current space
-            neighboring_states_viewed += 1
-            # Moves the queen to the new possible location and calculates the number of conflicts
-            board[poss_loc[0]][poss_loc[1]] = 1
-            queen_locations[worst_queen_index] = poss_loc
-            num_conflicts, _ = calc_conflicts(board, queen_locations)
-            if best_neighbor_board is None:  # Gives the first state as the best neighbor state (for now at least)
-                best_neighbor_board = deepcopy(board)
-                best_neighbor_queen_locations = deepcopy(queen_locations)
-                best_neighbor_num_conflicts = num_conflicts
-            if num_conflicts < best_neighbor_num_conflicts:  # If best neighbor (least conflict neighbor)
-                best_neighbor_board = deepcopy(board)
-                best_neighbor_queen_locations = deepcopy(queen_locations)
-                best_neighbor_num_conflicts = num_conflicts
-            board[poss_loc[0]][poss_loc[1]] = 0  # Reset the board for the next state
-    if best_neighbor_num_conflicts <= prev_conflicts:  # If better state found
-        if best_neighbor_num_conflicts == prev_conflicts:  # Finds an equal state
-            failed_better += 1
-        else:  # Finds a better state
-            failed_better = 0
-        print("State {} (moved queen {}):".format(state_transitions, worst_queen_index + 1))
-        best_neighbor_num_conflicts, queen_conflicts = calc_conflicts(best_neighbor_board,
-                                                                      best_neighbor_queen_locations)
-        print_stats(best_neighbor_board, best_neighbor_num_conflicts, queen_conflicts, best_neighbor_queen_locations)
-    else:  # If all next states are worse
-        print("Tried moving queen {}. No better or equal states found.".format(worst_queen_index + 1))
-    if failed_better == 60:
+    next_search_tree = SearchTree(board, queen_locations)
+    for qi, queen_loc in enumerate(queen_locations):
+        for poss_loc in possible_locations:
+            if poss_loc != queen_loc and board[poss_loc[0]][poss_loc[1]] == 0:
+                neighboring_states_viewed += 1
+                board[queen_loc[0]][queen_loc[1]] = 0  # Removes where the queen used to be
+                board[poss_loc[0]][poss_loc[1]] = 1  # Adds where the queen is moved to
+                queen_locations[qi] = poss_loc  # Updates the queens location
+                next_search_tree.add_node(board, queen_locations)
+                # Reverts the queen movement on the board and in the queen_locations
+                board[queen_loc[0]][queen_loc[1]] = 1
+                board[poss_loc[0]][poss_loc[1]] = 0
+                queen_locations[qi] = queen_loc
+    best_child = next_search_tree.get_best_child()
+    board = best_child.board
+    queen_locations = best_child.queen_locations
+    num_conflicts, queen_conflicts = calc_conflicts(board, queen_locations)
+    if num_conflicts == 0:
         game_over = True
-    if best_neighbor_num_conflicts == 0:
+        print("--------------------------------------------------")
+        print("Solution state found.")
+        print("State {}:".format(state_transitions))
+        print_stats(board, num_conflicts, queen_conflicts, queen_locations)
+    if state_transitions <= 4 and (game_over is not True):
+        print("--------------------------------------------------")
+        print("State {}:".format(state_transitions))
+        print_stats(board, num_conflicts, queen_conflicts, queen_locations)
+    if state_transitions == 60:
         game_over = True
+        print("--------------------------------------------------")
+        print("60 state transitions have occurred and no solution has been found. Giving up :(")
+        print("State {}:".format(state_transitions + 1))
+        print_stats(board, num_conflicts, queen_conflicts, queen_locations)
 
-print("--------------------------------------------------")
+print("WARNING: The choice of the next best state is random (when there is a tie), "
+      "there may be some variance in outputs from run to run!")
 print("Total state transitions: {}".format(state_transitions))
 print("Total neighboring states viewed: {}".format(neighboring_states_viewed))

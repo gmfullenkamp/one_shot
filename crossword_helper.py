@@ -1,52 +1,31 @@
-"""
-crossword board =  # the FILLER char is a no-go and spaces are empty slots for letters.
-["cat",
- " n ",
- " t "]
-"""
+import enchant
+import itertools
+from tqdm import tqdm
 
-FILLER = '#'
+alphabet = "abcdefghijklmnopqrstuvwxyz"
 
+d = enchant.Dict("en_US")
 
-def get_board() -> list:
-    """Gets the board from the user."""
-    board = []
-    board_dim = int(input("Enter board width (integer >= 2): "))
-    for r in range(board_dim):
-        in_row = input("Enter the {}th row of letters (' ' are empty squares and '{}' are filled squares): "
-                       .format(r + 1, FILLER))
-        board.append(in_row)
-    return board
+word = input("Input the word (spaces are missing characters): ").lower()
+print("Input word: '{}'".format(word.replace(' ', '_')))
+word_len = len(word)
+print("{} ({}^{}) character possibilities...".format((len(alphabet) ** word_len), len(alphabet), word_len))
 
 
-def print_board(board: list) -> None:
-    """Prints the board in a visually appealing way (better than printing a list lol)."""
-    for row in board:
-        for letter in row:
-            print(letter, end=" ")
-        print(end="\n")
+def compare_words(in_word: str, orig_word: str):
+    all_good = True
+    for pc, c in zip(in_word, orig_word):
+        if c != ' ' and pc != c:
+            all_good = False
+            break
+    return all_good
 
 
-def get_across(board: list, n: int) -> str:
-    """Retrieves the nth across word on the board and returns the string (with empty spaces)."""
-    all_row_words = []
-    for row in board:
-        row_words = row.split(FILLER)
-        for word in row_words:  # Iterates through words and removes empty splits and single letters
-            if len(word) > 1:
-                all_row_words.append(word)
-    if n - 1 >= len(all_row_words) or n <= 0:
-        raise KeyError("Across number {} is out of bounds for all across words. {} across words total."
-                       .format(n, len(all_row_words)))
-    print(all_row_words)
-    return all_row_words[n - 1]
-
-
-def get_down(board: list, n: int) -> str:
-    """Retrieves the nth down word on the board and returns the string (with empty spaces)."""
-    # TODO: Finish implementation of get down (May need to change board to list of list of char instead of list of str)
-
-
-puzzle = get_board()
-print_board(puzzle)
-get_across(puzzle, 1)
+# TODO: Instead of entire words, make fillers for all the empty spaces. (saves memory and time)
+character_possibilities = [''.join(i) for i in itertools.product(alphabet, repeat=word_len)]
+answer_possibilities = []
+for w in tqdm(character_possibilities):
+    if compare_words(w, word):
+        if d.check(w):
+            answer_possibilities.append(w)
+print(answer_possibilities)

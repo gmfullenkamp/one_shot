@@ -1,13 +1,17 @@
+"""
+Vertical blur kernel for a 2d convolution on images.
+The output is then turned into red and blue lines (positive and negative values).
+"""
 import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 import scipy
 
-IMG_NAME = "jerry_fortune.png"
+IMG_NAME = "smile.png"
 
-blur = [[0.25, 0.5, 0.25],
-        [0., 0., 0.],
-        [-0.25, -0.5, -0.25]]
+blur = [[0.25, 0., -0.25],
+        [0.5, 0., -0.5],
+        [0.25, 0., -0.25]]
 blur = np.array(blur)
 
 
@@ -17,9 +21,9 @@ def pn_2_rb(in_img: np.array) -> np.array:
     rb_img = np.zeros(shp + [3])
     for r in range(shp[0]):
         for c in range(shp[1]):
-            if in_img[r][c] > 10:
+            if in_img[r][c] > 1:
                 rb_img[r][c] = [0., 230., 255.]  # Turns positives into red
-            elif in_img[r][c] < -10:
+            elif in_img[r][c] < -1:
                 rb_img[r][c] = [255., 0., 255.]  # Turns negatives into blue
     return rb_img
 

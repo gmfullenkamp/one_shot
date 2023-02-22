@@ -1,4 +1,6 @@
 """
+Looking at training a seq2seq model for creating a conversational robot. (i.e. chatbot)
+
 https://medium.com/predict/creating-a-chatbot-from-scratch-using-keras-and-tensorflow-59e8fc76be79
 """
 import numpy as np
@@ -15,7 +17,7 @@ RETRAIN = True  # If model doesn't exist, retrain
 
 # Load dataset
 print("Loading Dataset...")
-squad_ds = tfds.load("natural_questions_open")
+squad_ds = tfds.load("natural_questions_open")  # TODO: Find a better conversation dataset.
 train_ds = squad_ds["train"]
 validation_ds = squad_ds["validation"]
 

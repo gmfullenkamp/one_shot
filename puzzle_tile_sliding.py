@@ -1,5 +1,5 @@
 """
-3x3 mystic puzzle game.
+3x3 tile sliding puzzle game.
 Goal state: [[1, 2, 3], [4, 5, 6], [7, 8, 0]]
 1 2 3
 4 5 6
@@ -15,7 +15,7 @@ ALL_TILES = [1, 2, 3, 4, 5, 6, 7, 8, 0]
 BOARD_SHAPE = [3, 3]
 OPERATIONS = ["right", "left", "up", "down", 'r', 'l', 'u', 'd']  # Used in move_empty_tile
 AVG_OPS_PER_TURN = 3
-TREE_DEPTH = 18  # Generate AVG_OPS_PER_TURN**TREE_DEPTH amount of nodes (depending on board size, memory issues...)
+TREE_DEPTH = 10  # Generate AVG_OPS_PER_TURN**TREE_DEPTH amount of nodes (depending on board size, memory issues...)
 if (BOARD_SHAPE[0] * BOARD_SHAPE[1]) != len(ALL_TILES):
     raise ValueError("Amount of tiles {} don't fill the board shape {}x{}."
                      .format(len(ALL_TILES), BOARD_SHAPE[0], BOARD_SHAPE[1]))
@@ -155,5 +155,5 @@ tree_time = (time.time() - start_time)
 print("It took {} seconds to generate a tree with a depth of {} and {} nodes."
       .format(tree_time, TREE_DEPTH, total_nodes))
 
-# TODO: Limited breadth first search for the goal
+# TODO: Breadth first search for the goal (get trace of moves when retrieving quickest goal state)
 # TODO: Custom heuristic addition (loss?!?!?!)

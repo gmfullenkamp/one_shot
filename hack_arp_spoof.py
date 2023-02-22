@@ -7,7 +7,7 @@ Disclaimer: This script is for educational purposes only!
 Do not use against any network that you don't own or have authorization to test.
 
 To run this script use:
-sudo python3 arp_spoof.py -ip_range 10.0.0.0/24 (ex. 192.168.1.0/24)
+sudo python3 hack_arp_spoof.py -ip_range 10.0.0.0/24 (ex. 192.168.1.0/24)
 """
 from ipaddress import IPv4Network
 import os

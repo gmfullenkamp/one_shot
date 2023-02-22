@@ -1,10 +1,12 @@
+"""
+Custom script that takes in any image and
+outputs it using binary in the command line.
+"""
 import cv2
-from itertools import cycle
 from matplotlib import pyplot as plt
 import numpy as np
 import os
 import scipy
-from termcolor import colored
 from time import sleep
 
 # Order of number from lightest to darkest:
@@ -35,7 +37,7 @@ ax2.set_title("Vertical")
 ax2.imshow(vertical_img, cmap="gray")
 ax3.set_title("Both")
 ax3.imshow(both_img, cmap="gray")
-# plt.show()
+plt.show()
 
 
 def print_binary_image(img: np.array) -> None:
@@ -49,7 +51,7 @@ def print_binary_image(img: np.array) -> None:
         print(end="\n")
 
 
-for _ in range(5):  # TODO: Make his work for a video, or single input image
+for _ in range(1):  # TODO: Make his work for a video, or single input image
     print_binary_image(both_img)
     sleep(1)
 os.system("cls")  # Command specific for windows

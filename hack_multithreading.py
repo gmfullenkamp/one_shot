@@ -1,3 +1,6 @@
+"""
+Learning how to distribute code across threads.
+"""
 import threading
 import time
 
@@ -22,7 +25,7 @@ def worker(delay: int) -> None:
 for i in range(len(delay_index)):
     _delay = delay_index[i]
     total_delay += _delay
-    t = threading.Thread(target=worker, name=f"Worker_{_delay}")
+    t = threading.Thread(target=worker, name=f"Worker_{_delay}")  # TODO: Fix old thread worker delay bug
     thread_pool.append(t)
 
 # Start worker threads

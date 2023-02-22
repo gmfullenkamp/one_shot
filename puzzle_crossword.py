@@ -1,3 +1,7 @@
+"""
+Initial thought vomit to getting all possible word fits for a line in a crossword puzzle.
+Can definitely be improved...
+"""
 import enchant
 import itertools
 from tqdm import tqdm

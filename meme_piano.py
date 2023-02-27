@@ -50,12 +50,22 @@ def note_to_midi(note, octave=0):
         return None
 
 
-def generate_random_music(num_notes, tempo, min_octave=-2, max_octave=2, min_duration=0.25, max_duration=4.0):
+def generate_random_music(num_notes, tempo, key='C', scale='major', min_octave=-1, max_octave=1,
+                          min_duration=0.25, max_duration=4.0):
+    # dictionary mapping scale degrees to semitone offsets
+    scale_map = {'major': [0, 2, 4, 5, 7, 9, 11],
+                 'natural_minor': [0, 2, 3, 5, 7, 8, 10]}
+
     # list of available note names
     notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-    # randomly select notes, octaves, and durations
-    random_notes = [random.choice(notes) for i in range(num_notes)]
+    # calculate semitone offsets for the selected scale
+    root_note = note_to_midi(key)
+    scale_degrees = scale_map[scale]
+    semitone_offsets = [(root_note + degree) % 12 for degree in scale_degrees]
+
+    # randomly select notes, octaves, and durations within the key and scale
+    random_notes = [random.choice([note for note in notes if note_to_midi(note) % 12 in semitone_offsets]) for i in range(num_notes)]
     random_octaves = [random.randint(min_octave, max_octave) for i in range(num_notes)]
     random_durations = [random.uniform(min_duration, max_duration) for i in range(num_notes)]
 
@@ -66,5 +76,38 @@ def generate_random_music(num_notes, tempo, min_octave=-2, max_octave=2, min_dur
     play_piano(midi_notes, random_durations, tempo)
 
 
+def generate_scale(tempo, key='C', scale='major', octave=0):
+    # dictionary mapping scale degrees to semitone offsets
+    scale_map = {'major': [0, 2, 4, 5, 7, 9, 11, 12],
+                 'natural_minor': [0, 2, 3, 5, 7, 8, 10, 12]}
+
+    # list of available note names
+    notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+    # calculate semitone offsets for the selected scale
+    root_note = note_to_midi(key, octave=octave)
+    scale_degrees = scale_map[scale]
+    semitone_offsets = [(root_note + degree) % 12 for degree in scale_degrees]
+
+    # select notes from the scale and calculate their MIDI note numbers
+    scale_notes = [note for note in notes if note_to_midi(note, octave=octave) % 12 in semitone_offsets]
+    midi_notes = [note_to_midi(note, octave=octave) for note in scale_notes]
+    midi_notes.append(midi_notes[0] + 12)
+
+    # create a sequence that goes up and down the scale
+    sequence = list(range(len(midi_notes))) + list(range(len(midi_notes) - 2, -1, -1))
+
+    # generate a list of note durations (in seconds) for each note in the sequence
+    duration = 60 / tempo  # duration of a quarter note
+    durations = [duration] * len(sequence)
+
+    # play the scale at the specified tempo and sequence
+    midi_sequence = [midi_notes[i] for i in sequence]
+    duration_sequence = [durations[i] for i in sequence]
+    play_piano(midi_sequence, duration_sequence, tempo)
+
+
 # example usage
-generate_random_music(8, 120)
+generate_scale(120, key='A', scale='natural_minor')
+
+generate_random_music(10, 120, key='A', scale='natural_minor')

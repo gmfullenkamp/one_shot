@@ -132,7 +132,9 @@ def download_files(keyword, extension="py"):
     for link in soup.find_all('a'):
         href = link.get('href')
         if ('/url?q=' in href) and ('.' + extension in href):
-            file_links.append(href.replace('/url?q=', '').split("&sa=")[0])
+            url = href.replace('/url?q=', '').split("&sa=")[0]
+            if url.endswith('.' + extension):
+                file_links.append(url)
 
     # Download each file and save it to a local directory
     output_dir = 'downloaded_files'
@@ -154,9 +156,9 @@ def download_files(keyword, extension="py"):
     return file_paths
 
 
-my_file = r"C:\Users\gmful\Downloads\web_server\src\FTPClient.java"
+my_file = r"C:\Users\gmful\Downloads\threaded_fibonacci.c"
 
-web_files = download_files("ftpclient", "java")
+web_files = download_files("ThreadedFibonacci", "c")
 
 for file in web_files:
     similaritysss, matchesss = compare_files(my_file, file, n=3, threshold=0.5)

@@ -7,3 +7,6 @@
 # Image files
 *.png
 *.jpg
+
+# Video files
+*.avi
